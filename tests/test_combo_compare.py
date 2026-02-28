@@ -10,6 +10,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from app.services.combo_service import compare_combo_solutions, recommend_combos
 from main import app
+#use this to run the tests and compare model and non model outputs for the combo endpoint. It will check that the response structure is consistent and that the precision at k is a valid value. You can also run this test to ensure that changes to the combo recommendation logic do not break the expected output format or introduce non-deterministic behavior.
+# py -c "from app.services.combo_service import compare_combo_solutions; r=compare_combo_solutions(branch='Conut Jnah', top_k=5, include_modifiers=False, min_support=0.02, min_confidence=0.15, min_lift=1.0); print(r['non_ai_answer_line']); print(r['ml_answer_line']); print('ML Precision@K:', r['ml_precision_at_k']); print('Evaluation:', r['evaluation_note'])"
 
 
 class ComboCompareTests(unittest.TestCase):
