@@ -10,6 +10,7 @@ Usage:
 
 import json
 import logging
+import os
 import urllib.request
 from textwrap import dedent
 
@@ -25,7 +26,9 @@ from telegram.ext import (
 # ── Configuration ───────────────────────────────────────────────────────
 
 BOT_TOKEN = "8700050723:AAGOuMqG6RjeEimBiuGIPDJpFwVra2SC8m0"
-API_BASE = "http://127.0.0.1:8000"
+# When pointing at the deployed Render service, set API_BASE env var:
+#   e.g.  set API_BASE=https://conut-ai-engineering-hackathon.onrender.com
+API_BASE = os.getenv("API_BASE", "http://127.0.0.1:8000")
 
 logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
