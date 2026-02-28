@@ -26,3 +26,14 @@ app.include_router(growth_router, tags=["growth"])
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok", "service": "conut-chief-ops-agent"}
+
+
+@app.get("/branches")
+def branches() -> dict:
+    """Discovery endpoint – returns valid entity values for OpenClaw."""
+    return {
+        "branches": ["Conut", "Conut - Tyre", "Conut Jnah", "Main Street Coffee"],
+        "shifts": ["morning", "midday", "evening"],
+        "default_horizon_months": 3,
+        "default_top_k": 5,
+    }
