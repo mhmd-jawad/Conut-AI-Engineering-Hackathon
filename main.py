@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 
 import app.core.config  # noqa: F401 – load .env early
@@ -37,3 +39,11 @@ def branches() -> dict:
         "default_horizon_months": 3,
         "default_top_k": 5,
     }
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    # Render injects PORT dynamically; fall back to 8000 for local dev.
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
