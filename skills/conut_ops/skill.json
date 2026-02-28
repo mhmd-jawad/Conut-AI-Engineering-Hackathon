@@ -1,0 +1,79 @@
+{
+  "name": "conut_ops",
+  "display_name": "Conut Chief of Operations",
+  "version": "1.0.0",
+  "description": "AI-driven decision-support agent for Conut bakery & café chain. Covers combo optimization, demand forecasting, staffing estimation, expansion feasibility, and coffee/milkshake growth strategy across 4 branches.",
+  "author": "Conut AI Engineering Team — AUB",
+  "license": "MIT",
+  "base_url": "http://127.0.0.1:8000",
+  "entry_point": "SKILL.md",
+  "tags": ["operations", "analytics", "forecasting", "staffing", "bakery"],
+  "tools": [
+    {
+      "name": "ask_operations_agent",
+      "description": "Send any natural-language business question to the Conut Chief of Operations Agent. It handles intent classification, entity extraction, and analytics internally.",
+      "endpoint": "POST /chat",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string",
+            "description": "A natural-language business question about combos, forecasts, staffing, expansion, or coffee/milkshake growth. Examples: 'What are the top combos for Conut Jnah?', 'Forecast demand for Conut - Tyre next 4 months', 'How many staff for the evening shift?'"
+          }
+        },
+        "required": ["question"]
+      },
+      "returns": {
+        "type": "object",
+        "properties": {
+          "intent": { "type": "string", "enum": ["combo", "forecast", "staffing", "expansion", "growth", "unknown"] },
+          "branch": { "type": "string", "nullable": true },
+          "answer": { "type": "string", "description": "Pre-formatted Markdown answer ready to display" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "elapsed_ms": { "type": "number" },
+          "data": { "type": "object", "description": "Raw structured data from the analytics service" },
+          "error": { "type": "string", "nullable": true }
+        }
+      }
+    },
+    {
+      "name": "discover_branches",
+      "description": "Get valid branch names, shift values, and default parameters. Use this to validate user input before calling the agent.",
+      "endpoint": "GET /branches",
+      "parameters": {},
+      "returns": {
+        "type": "object",
+        "properties": {
+          "branches": { "type": "array", "items": { "type": "string" } },
+          "shifts": { "type": "array", "items": { "type": "string" } },
+          "default_horizon_months": { "type": "integer" },
+          "default_top_k": { "type": "integer" }
+        }
+      }
+    },
+    {
+      "name": "health_check",
+      "description": "Verify the backend is running and responsive.",
+      "endpoint": "GET /health",
+      "parameters": {},
+      "returns": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "service": { "type": "string" }
+        }
+      }
+    }
+  ],
+  "capabilities": [
+    "combo_optimization",
+    "demand_forecasting",
+    "staffing_estimation",
+    "expansion_feasibility",
+    "coffee_milkshake_growth_strategy"
+  ],
+  "requirements": {
+    "server": "python -m uvicorn main:app --host 127.0.0.1 --port 8000",
+    "health_check": "GET http://127.0.0.1:8000/health"
+  }
+}

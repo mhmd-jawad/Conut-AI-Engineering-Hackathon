@@ -252,10 +252,36 @@ natural-language input.
 
 ---
 
+## Tools (Structured Definitions)
+
+OpenClaw can also reference the companion `skill.json` file for structured
+function-calling schemas. Below is the summary:
+
+### `ask_operations_agent`
+- **Method:** `POST /chat`
+- **Input:** `{ "question": "<string>" }`
+- **Output:** `{ intent, branch, answer, confidence, elapsed_ms, data, error }`
+- **Use for:** All 5 business objectives via natural language.
+
+### `discover_branches`
+- **Method:** `GET /branches`
+- **Input:** none
+- **Output:** `{ branches[], shifts[], default_horizon_months, default_top_k }`
+- **Use for:** Validating branch names and shift values before querying.
+
+### `health_check`
+- **Method:** `GET /health`
+- **Input:** none
+- **Output:** `{ status, service }`
+- **Use for:** Verifying the backend is live before dispatching queries.
+
+---
+
 ## Quick-Start Checklist
 
 1. Ensure the FastAPI server is running: `uvicorn main:app --host 127.0.0.1 --port 8000`
 2. Verify: `GET http://127.0.0.1:8000/health` → `{"status": "ok"}`
-3. Load this skill in OpenClaw.
-4. Ask any of the example prompts above.
-5. The `/chat` endpoint handles everything — no manual routing needed.
+3. Load this skill in OpenClaw (point to `skills/conut_ops/`).
+4. OpenClaw reads `SKILL.md` + `skill.json` for routing.
+5. Ask any of the example prompts above.
+6. The `/chat` endpoint handles everything — no manual routing needed.

@@ -35,8 +35,8 @@ def _format_combo(data: dict) -> str:
     lines: list[str] = []
     branch = data.get("branch", "All")
     total_baskets = data.get("total_baskets", "?")
-    lines.append(f"## 🍩 Combo Recommendations — {branch}")
-    lines.append(f"*Based on {_num(total_baskets)} baskets analysed.*\n")
+    lines.append(f"🍩  *Combo Recommendations — {branch}*")
+    lines.append(f"📊  Based on {_num(total_baskets)} baskets analysed\n")
 
     combos = data.get("combos") or data.get("recommendations") or []
     if not combos:
@@ -50,13 +50,18 @@ def _format_combo(data: dict) -> str:
         conf = c.get("confidence_a_to_b", c.get("confidence", 0))
         supp = c.get("support", 0)
         price = c.get("suggested_bundle_price")
-        lines.append(
-            f"**{i}. {a}  +  {b}**  "
-            f"| lift {_num(lift)}× | confidence {_pct(conf * 100 if conf < 1 else conf)} "
-            f"| support {_pct(supp * 100 if supp < 1 else supp)}"
-        )
+
+        conf_val = conf * 100 if conf < 1 else conf
+        supp_val = supp * 100 if supp < 1 else supp
+
+        lines.append(f"━━━━━━━━━━━━━━━━━━━━")
+        lines.append(f"*{i}.  {a}  +  {b}*")
+        lines.append(f"    📈  Lift: *{_num(lift)}×*")
+        lines.append(f"    ✅  Confidence: *{_pct(conf_val)}*")
+        lines.append(f"    📦  Support: *{_pct(supp_val)}*")
         if price:
-            lines.append(f"   ➜ Suggested bundle price: **{_num(price)}**")
+            lines.append(f"    💰  Bundle price: *${_num(price)}*")
+        lines.append("")
 
     return "\n".join(lines)
 
@@ -68,25 +73,26 @@ def _format_forecast(data: dict) -> str:
     branch = data.get("branch", "?")
     trend = data.get("trend_classification", "N/A")
     mom = data.get("mom_growth_pct")
-    lines.append(f"## 📈 Demand Forecast — {branch}")
-    lines.append(f"**Trend:** {trend}  |  **Month-over-month growth:** {_pct(mom) if mom is not None else 'N/A'}\n")
+    lines.append(f"📈  *Demand Forecast — {branch}*\n")
+    lines.append(f"🔹  Trend: *{trend}*")
+    lines.append(f"🔹  Month-over-month: *{_pct(mom) if mom is not None else 'N/A'}*\n")
 
     forecasts = data.get("forecasts") or []
     if forecasts:
-        lines.append("| Month | WMA | Trend-Reg | Ensemble |")
-        lines.append("|-------|-----|-----------|----------|")
+        lines.append("📅  *Monthly Projections:*\n")
         for f in forecasts:
             label = f.get("label", "?")
             wma = _num(f.get("wma"))
             trend_r = _num(f.get("trend_regression"))
             ens = _num(f.get("ensemble"))
-            lines.append(f"| {label} | {wma} | {trend_r} | {ens} |")
+            lines.append(f"  *{label}*")
+            lines.append(f"    WMA: {wma}  |  Trend: {trend_r}  |  Ensemble: {ens}")
 
     anomalies = data.get("anomalies") or []
     if anomalies:
-        lines.append("\n**⚠ Anomalies detected:**")
+        lines.append("\n⚠️  *Anomalies Detected:*")
         for a in anomalies:
-            lines.append(f"- {a.get('label', '?')}: {_num(a.get('value'))} (median {_num(a.get('median'))})")
+            lines.append(f"  ❗ {a.get('label', '?')}: {_num(a.get('value'))} (median {_num(a.get('median'))})")
 
     return "\n".join(lines)
 
@@ -97,17 +103,19 @@ def _format_staffing(data: dict) -> str:
     lines: list[str] = []
     branch = data.get("branch", "?")
     shift = data.get("shift", "?")
-    lines.append(f"## 👥 Staffing Recommendation — {branch} ({shift} shift)")
+    lines.append(f"👥  *Staffing — {branch}*")
+    lines.append(f"🕐  Shift: *{shift}*\n")
 
     scenarios = data.get("scenarios") or {}
     if scenarios:
         for label, info in scenarios.items():
             head = info if isinstance(info, (int, float)) else info.get("headcount", info)
-            lines.append(f"- **{label.title()}:** {_num(head)} staff")
+            emoji = "🟢" if "low" in label.lower() else ("🟡" if "mid" in label.lower() or "medium" in label.lower() else "🔴")
+            lines.append(f"  {emoji}  {label.title()}:  *{_num(head)} staff*")
 
     rationale = data.get("rationale") or data.get("notes")
     if rationale:
-        lines.append(f"\n> {rationale}")
+        lines.append(f"\n💡  {rationale}")
 
     return "\n".join(lines)
 
@@ -116,33 +124,33 @@ def _format_staffing(data: dict) -> str:
 
 def _format_expansion(data: dict) -> str:
     lines: list[str] = []
-    lines.append("## 🏗 Expansion Feasibility Report\n")
+    lines.append("🏗  *Expansion Feasibility Report*\n")
 
     verdict = data.get("verdict", "N/A")
-    lines.append(f"**Verdict:** {verdict}\n")
+    lines.append(f"📋  Verdict: *{verdict}*\n")
 
     # Best archetype
     archetype = data.get("best_archetype") or {}
     if archetype:
-        lines.append(f"**Best archetype branch:** {archetype.get('branch', '?')} "
-                      f"(score {_num(archetype.get('total_score'))})")
+        lines.append(f"🏆  Best archetype: *{archetype.get('branch', '?')}*")
+        lines.append(f"    Score: *{_num(archetype.get('total_score'))}*\n")
 
     # Scorecards
     scorecards = data.get("branch_scorecards") or []
     if scorecards:
-        lines.append("\n| Branch | Score |")
-        lines.append("|--------|-------|")
+        lines.append("📊  *Branch Scores:*")
         for sc in scorecards:
-            lines.append(f"| {sc.get('branch', '?')} | {_num(sc.get('total_score'))} |")
+            lines.append(f"  🔹  {sc.get('branch', '?')}:  *{_num(sc.get('total_score'))}*")
+        lines.append("")
 
     # Candidate locations
     candidates = data.get("candidate_locations") or []
     if candidates:
-        lines.append("\n**Top candidate locations:**")
+        lines.append("📍  *Top Candidate Locations:*\n")
         for i, loc in enumerate(candidates[:5], 1):
             name = loc.get("area", loc.get("name", "?"))
             score = loc.get("location_score", loc.get("score", "?"))
-            lines.append(f"{i}. **{name}** — score {_num(score)}")
+            lines.append(f"  {i}.  *{name}* — score {_num(score)}")
 
     return "\n".join(lines)
 
@@ -152,81 +160,82 @@ def _format_expansion(data: dict) -> str:
 def _format_growth(data: dict) -> str:
     lines: list[str] = []
     branch = data.get("branch", "?")
-    lines.append(f"## ☕ Coffee & Milkshake Growth Strategy — {branch}\n")
+    lines.append(f"☕  *Coffee & Milkshake Growth — {branch}*\n")
 
-    # growth_strategy returns {"branch": ..., "branches": [profile, ...], "explanation": ...}
     profiles = data.get("branches") or []
     if isinstance(profiles, list) and profiles:
         for prof in profiles:
             b_name = prof.get("branch", branch)
             pen = prof.get("beverage_penetration_pct")
+
+            lines.append(f"━━━━━━━━━━━━━━━━━━━━")
+            lines.append(f"🏪  *{b_name}*")
             if pen is not None:
-                lines.append(f"### {b_name}")
-                lines.append(f"- **Beverage penetration:** {_pct(pen)}")
+                lines.append(f"    🥤  Beverage penetration: *{_pct(pen)}*")
             rank = prof.get("penetration_rank")
             if rank:
-                lines.append(f"- **Penetration rank:** #{rank}")
+                lines.append(f"    🏅  Rank: *#{rank}*")
             coffee_rev = prof.get("coffee_revenue")
             shake_rev = prof.get("milkshake_revenue")
             if coffee_rev is not None:
-                lines.append(f"- **Coffee revenue:** {_num(coffee_rev)}")
+                lines.append(f"    ☕  Coffee revenue: *{_num(coffee_rev)}*")
             if shake_rev is not None:
-                lines.append(f"- **Milkshake revenue:** {_num(shake_rev)}")
+                lines.append(f"    🥛  Milkshake revenue: *{_num(shake_rev)}*")
 
             heroes_c = prof.get("hero_coffee_items") or []
             if heroes_c:
                 items = [h.get("description") or h.get("item") or str(h) if isinstance(h, dict) else str(h) for h in heroes_c[:3]]
-                lines.append(f"- **Hero coffee items:** {', '.join(items)}")
+                lines.append(f"    ⭐  Hero coffee: {', '.join(items)}")
 
             heroes_s = prof.get("hero_milkshake_items") or []
             if heroes_s:
                 items = [h.get("description") or h.get("item") or str(h) if isinstance(h, dict) else str(h) for h in heroes_s[:3]]
-                lines.append(f"- **Hero milkshake items:** {', '.join(items)}")
+                lines.append(f"    ⭐  Hero milkshake: {', '.join(items)}")
 
             under = prof.get("underperforming_items") or []
             if under:
-                lines.append("\n**Underperforming products (≥ 40% gap):**")
+                lines.append(f"\n    ⚠️  *Underperforming (≥40% gap):*")
                 for u in under[:5]:
                     if isinstance(u, dict):
-                        lines.append(f"- {u.get('description') or u.get('item') or u.get('product', '?')}: gap {_pct(u.get('gap_pct', 0))}")
+                        lines.append(f"      ❗ {u.get('description') or u.get('item') or u.get('product', '?')}: gap {_pct(u.get('gap_pct', 0))}")
                     else:
-                        lines.append(f"- {u}")
+                        lines.append(f"      ❗ {u}")
 
             actions = prof.get("actions") or []
             if actions:
-                lines.append("\n**Recommendations:**")
+                lines.append(f"\n    💡  *Recommendations:*")
                 for i, a in enumerate(actions, 1):
                     if isinstance(a, dict):
                         text = a.get("recommendation") or a.get("action") or a.get("text") or str(a)
-                        lines.append(f"{i}. {text}")
+                        lines.append(f"      {i}. {text}")
                     else:
-                        lines.append(f"{i}. {a}")
+                        lines.append(f"      {i}. {a}")
 
-            lines.append("")  # blank between profiles
+            lines.append("")
         return "\n".join(lines)
 
-    # Fallback: old format with key_metrics / recommendations at top level
+    # Fallback: old format
     metrics = data.get("key_metrics") or data.get("branch_profile") or {}
     if metrics:
         bev = metrics.get("beverage_penetration") or metrics.get("beverage_penetration_pct")
         if bev is not None:
-            lines.append(f"- **Beverage penetration:** {_pct(bev if bev > 1 else bev * 100)}")
+            lines.append(f"    🥤  Beverage penetration: *{_pct(bev if bev > 1 else bev * 100)}*")
         hero = metrics.get("hero_product") or metrics.get("hero_products")
         if hero:
             if isinstance(hero, list):
-                lines.append(f"- **Hero products:** {', '.join(str(h) for h in hero[:3])}")
+                lines.append(f"    ⭐  Hero products: {', '.join(str(h) for h in hero[:3])}")
             else:
-                lines.append(f"- **Hero product:** {hero}")
+                lines.append(f"    ⭐  Hero product: {hero}")
 
     recs = data.get("recommendations") or []
     if recs:
-        lines.append("\n**Recommendations:**")
+        lines.append(f"\n💡  *Recommendations:*")
         for i, r in enumerate(recs, 1):
             if isinstance(r, dict):
                 text = r.get("recommendation") or r.get("action") or r.get("text") or str(r)
-                lines.append(f"{i}. {text}")
+                lines.append(f"  {i}. {text}")
             else:
-                lines.append(f"{i}. {r}")
+                lines.append(f"  {i}. {r}")
 
     return "\n".join(lines)
 
@@ -251,19 +260,24 @@ def _format_multi(data: dict, single_formatter) -> str:
 # ── Unknown / fallback ─────────────────────────────────────────────────
 
 HELP_TEXT = (
-    "## 🤖 Conut Operations Agent\n\n"
+    "🤖  *Conut Operations Agent*\n\n"
     "I can help you with:\n\n"
-    "1. **Combo Optimization** — find best product bundles  \n"
-    "   _e.g. \"What are the top combos for Conut Jnah?\"_\n\n"
-    "2. **Demand Forecasting** — predict future branch sales  \n"
-    "   _e.g. \"Forecast demand for Conut - Tyre next 4 months\"_\n\n"
-    "3. **Staffing Estimation** — staff needs per shift  \n"
-    "   _e.g. \"How many staff does Conut need for the evening shift?\"_\n\n"
-    "4. **Expansion Feasibility** — should we open a new branch?  \n"
-    "   _e.g. \"Is expansion feasible? Where should we open next?\"_\n\n"
-    "5. **Coffee & Milkshake Growth** — strategies to boost beverages  \n"
-    "   _e.g. \"Give me a growth strategy for Main Street Coffee\"_\n\n"
-    "Try asking a question about any of these topics!"
+    "1️⃣  *Combo Optimization*\n"
+    "      Find best product bundles\n"
+    '      _"What are the top combos for Conut Jnah?"_\n\n'
+    "2️⃣  *Demand Forecasting*\n"
+    "      Predict future branch sales\n"
+    '      _"Forecast demand for Conut - Tyre next 4 months"_\n\n'
+    "3️⃣  *Staffing Estimation*\n"
+    "      Staff needs per shift\n"
+    '      _"How many staff for the evening shift?"_\n\n'
+    "4️⃣  *Expansion Feasibility*\n"
+    "      Should we open a new branch?\n"
+    '      _"Is expansion feasible?"_\n\n'
+    "5️⃣  *Coffee & Milkshake Growth*\n"
+    "      Strategies to boost beverages\n"
+    '      _"Growth strategy for Main Street Coffee"_\n\n'
+    "💬  Try asking a question about any of these topics!"
 )
 
 
