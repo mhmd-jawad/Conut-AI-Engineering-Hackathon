@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 
+import app.core.config  # noqa: F401 – load .env early
+
+from app.api.chat import router as chat_router
 from app.api.combos import router as combos_router
 from app.api.expansion import router as expansion_router
 from app.api.forecast import router as forecast_router
@@ -9,6 +12,10 @@ from app.api.staffing import router as staffing_router
 
 app = FastAPI(title="Conut Chief of Operations Agent", version="0.1.0")
 
+# ── Unified agent endpoint (Operational AI Component) ───────────────────
+app.include_router(chat_router, tags=["chat"])
+
+# ── Individual objective endpoints ──────────────────────────────────────
 app.include_router(combos_router, tags=["combos"])
 app.include_router(forecast_router, tags=["forecast"])
 app.include_router(staffing_router, tags=["staffing"])
