@@ -1,462 +1,202 @@
-<div align="center">
+﻿<div align="center">
 
-# 🍩 Conut — Chief of Operations Agent
+#  Conut  Chief of Operations Agent
 
-**AI-Driven Decision-Support System for a Bakery & Café Chain**
+**AI-Driven Decision-Support System  AUB AI Engineering Hackathon**
 
-[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue?logo=python&logoColor=white)](#prerequisites)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.134-009688?logo=fastapi&logoColor=white)](#tech-stack)
-[![OpenAI GPT-4o](https://img.shields.io/badge/OpenAI-GPT--4o-412991?logo=openai&logoColor=white)](#llm-intent-classification)
-[![Telegram Bot](https://img.shields.io/badge/Telegram-Bot-26A5E4?logo=telegram&logoColor=white)](#telegram-bot)
-[![Slack Bot](https://img.shields.io/badge/Slack-Bot-4A154B?logo=slack&logoColor=white)](#slack-bot)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.134-009688?logo=fastapi&logoColor=white)](#api-reference)
+[![OpenAI GPT-4o](https://img.shields.io/badge/OpenAI-GPT--4o-412991?logo=openai&logoColor=white)](#architecture)
+[![Telegram Bot](https://img.shields.io/badge/Telegram-Live%20Bot-26A5E4?logo=telegram&logoColor=white)](https://t.me/AiEngineering503Nbot)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](#running-with-docker)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green)](#license)
 
-*Built for the AUB AI Engineering Hackathon*
+*Prof. Ammar Mohanna  American University of Beirut*
 
 </div>
 
 ---
 
-## Table of Contents
+##  Try It Now  Telegram Bot (Live)
 
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Architecture](#architecture)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Quick Start](#quick-start)
-- [API Reference](#api-reference)
-- [Telegram Bot](#telegram-bot)
-- [Slack Bot](#slack-bot)
-- [LLM Intent Classification](#llm-intent-classification)
-- [OpenClaw Integration](#openclaw-integration)
-- [Data Pipeline](#data-pipeline)
-- [Testing](#testing)
-- [Configuration](#configuration)
-- [License](#license)
+The backend is **deployed and running**. Talk to the agent directly on Telegram  no setup needed:
+
+> ###  [t.me/AiEngineering503Nbot](https://t.me/AiEngineering503Nbot)
+
+Just open the link and start asking questions:
+
+```
+"Forecast demand for Conut Jnah next 3 months"
+"Best combos for Conut - Tyre?"
+"How many staff for evening shift?"
+"Should we expand? Where in Lebanon?"
+"How do we grow milkshake sales?"
+```
 
 ---
 
-## Overview
+## Business Objectives
 
-**Conut Chief of Operations Agent** is an end-to-end operational AI system built for **Conut**, a bakery & café chain with **4 branches** across Lebanon. It answers natural-language business questions by routing them through an intelligent agent pipeline backed by 5 analytics services — all powered by real transactional data.
+Addresses all 5 hackathon requirements using real Conut operational data:
 
-Ask the agent a question in plain English (via Telegram, Slack, or the API), and it will classify your intent, extract entities, run the analysis, and return a beautifully formatted answer.
-
-> *"What are the best combos for Conut Jnah?"*
-> *"Forecast demand for the next 3 months"*
-> *"How many staff do we need for the evening shift?"*
-> *"Should we expand to a new area?"*
-> *"How can we grow milkshake sales?"*
-
----
-
-## Key Features
-
-| # | Objective | What It Does |
-|---|-----------|--------------|
-| 🍩 | **Combo Optimization** | Market-basket analysis (support / confidence / lift) + ML cosine-similarity to find the best product bundles, with suggested combo pricing |
-| 📈 | **Demand Forecasting** | Ensemble of Naive, Weighted Moving Average, and Linear Trend models to project branch-level revenue up to 6 months ahead |
-| 👥 | **Staffing Estimation** | Calculates optimal headcount per shift per branch using attendance patterns, sales velocity, and efficiency metrics |
-| 🌍 | **Expansion Feasibility** | Scores existing branches on 6 KPI dimensions, identifies the best archetype, and ranks candidate Lebanese cities for replication |
-| ☕ | **Beverage Growth Strategy** | Analyses coffee & milkshake performance across all 7 data sources — hero products, channel gaps, dessert-beverage bundles, revenue momentum, and customer metrics |
-| 💬 | **Conversational AI** | Natural chitchat and greetings handled gracefully via GPT-4o, so users get a friendly experience even outside business queries |
+| Objective | What it does |
+|-----------|-------------|
+|  **Combo Optimization** | Market-basket analysis (support / confidence / lift) + cosine similarity to find best product bundles |
+|  **Demand Forecasting** | Ensemble of Naive, WMA, and Linear Trend models  up to 6 months ahead per branch |
+|  **Staffing Estimation** | Optimal headcount per shift using attendance patterns and sales velocity |
+|  **Expansion Feasibility** | 6-KPI branch scorecard + ranked Lebanese candidate cities |
+|  **Beverage Growth** | Coffee & milkshake strategy derived from all 7 data sources |
 
 ---
 
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│                    Telegram / API Client                  │
-└────────────────────────┬─────────────────────────────────┘
-                         │  POST /chat
-                         ▼
-┌──────────────────────────────────────────────────────────┐
-│                    FastAPI Gateway                        │
-│                    (main.py)                              │
-└────────────────────────┬─────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────┐
-│               🤖 Agent Orchestrator                       │
-│                  (agent.py)                               │
-│                                                          │
-│   question ──► smart_classify() ──► dispatch() ──► format│
-│                     │                    │                │
-│            ┌────────┴────────┐     ┌─────┴──────┐        │
-│            │  GPT-4o LLM    │     │  5 Service  │        │
-│            │  (primary)     │     │  Engines    │        │
-│            │                │     │             │        │
-│            │  Regex         │     │  combo      │        │
-│            │  (fallback)    │     │  forecast   │        │
-│            └────────────────┘     │  staffing   │        │
-│                                   │  expansion  │        │
-│                                   │  growth     │        │
-│                                   └─────────────┘        │
-└──────────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────┐
-│              📊 Data Layer (11 processed CSVs)            │
-│              from 7+ raw report exports                   │
-└──────────────────────────────────────────────────────────┘
-```
-
-**4 layers:**
-
-1. **Data Layer** — ETL pipelines clean raw CSV exports into 11 canonical processed tables
-2. **Analytics Layer** — 5 service engines compute recommendations using pandas, scikit-learn, and statistical models
-3. **Agent Layer** — GPT-4o intent classifier + regex fallback + entity extraction + response formatting
-4. **Interface Layer** — FastAPI REST API + Telegram Bot + Slack Bot + OpenClaw skill
-
-For detailed architecture docs, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
-
----
-
-## Tech Stack
-
-| Category | Technologies |
-|----------|-------------|
-| **API Framework** | FastAPI 0.134, Uvicorn |
-| **Data & ML** | pandas, NumPy, scikit-learn, SciPy |
-| **LLM** | OpenAI GPT-4o (intent classification + chitchat) |
-| **Bots** | python-telegram-bot 22.6, slack-bolt 1.22 |
-| **Validation** | Pydantic v2 |
-| **Agent Platform** | OpenClaw (SKILL.md) |
-| **Language** | Python 3.12+ |
-
----
-
-## Project Structure
-
-```text
-Conut-AI-Engineering-Hackathon/
-│
-├── main.py                          # FastAPI app entry point
-├── telegram_bot.py                  # Telegram bot (forwards to /chat)
-├── slack_bot.py                     # Slack bot (forwards to /chat)
-├── requirements.txt                 # Python dependencies
-├── .env.example                     # Environment variable template
-│
-├── app/
-│   ├── agent/                       # 🤖 AI Agent layer
-│   │   ├── agent.py                 #    Orchestrator: classify → dispatch → format
-│   │   ├── llm_intent.py            #    GPT-4o intent classifier (primary)
-│   │   ├── intent.py                #    Regex intent classifier (fallback)
-│   │   ├── tools.py                 #    Service dispatcher
-│   │   └── formatter.py             #    Telegram-friendly output formatting
-│   │
-│   ├── api/                         # 🌐 REST endpoints
-│   │   ├── chat.py                  #    POST /chat — unified agent endpoint
-│   │   ├── combos.py                #    GET  /combos
-│   │   ├── forecast.py              #    GET  /forecast
-│   │   ├── staffing.py              #    GET  /staffing
-│   │   ├── expansion.py             #    GET  /expansion
-│   │   └── growth.py                #    GET  /growth
-│   │
-│   ├── services/                    # ⚙️ Business logic engines
-│   │   ├── combo_service.py         #    Basket analysis + cosine similarity
-│   │   ├── forecast_service.py      #    Ensemble demand forecasting
-│   │   ├── staffing_service.py      #    Shift-based headcount estimation
-│   │   ├── expansion_service.py     #    6-KPI scorecard + city ranking
-│   │   └── growth_service.py        #    Beverage strategy (7 data sources)
-│   │
-│   ├── schemas/                     # 📋 Pydantic request/response models
-│   └── core/                        # 🔧 Config & shared utilities
-│
-├── data/
-│   ├── raw/                         # Original report exports
-│   ├── processed/                   # Cleaned CSVs (pipeline output)
-│   └── external/                    # Curated external data (documented)
-│
-├── pipelines/                       # 🔄 ETL cleaning scripts
-│   ├── clean_*.py                   #    Per-report cleaning logic
-│   └── run_all.py                   #    Run all pipelines in sequence
-│
-├── skills/
-│   └── conut_ops/
-│       └── SKILL.md                 # 🧠 OpenClaw skill definition (288 lines)
-│
-├── tests/                           # ✅ Test suite
-│   ├── test_agent.py
-│   ├── test_combo_compare.py
-│   ├── test_expansion.py
-│   ├── test_forecast.py
-│   ├── test_staffing.py
-│   └── test_openclaw.py             #    20 OpenClaw integration tests
-│
-└── docs/                            # 📖 Documentation
-    ├── ARCHITECTURE.md
-    ├── OPENCLAW_INTEGRATION.md
-    └── IMPLEMENTATION_ROADMAP.md
+Telegram / Frontend / OpenClaw
+          |
+          |  POST /chat  (natural language)
+          v
+    +--------------+
+    |   FastAPI    |  main.py  single gateway, 6 routers
+    +--------------+
+          |
+          v
+    +----------------------------------+
+    |       Agent Orchestrator         |
+    |                                  |
+    |  GPT-4o intent classifier        |  <- primary
+    |  Regex fallback (50+ patterns)   |  <- zero-API fallback
+    |  Entity extractor (branch/shift) |
+    +----------------+-----------------+
+                     |
+       +-------------+-------------+----------+----------+
+       v             v             v          v          v
+    combo        forecast      staffing   expansion   growth
+    service      service       service    service     service
+       |
+       v
+  11 processed CSVs  <-  ETL pipelines  <-  7 raw report exports
 ```
 
 ---
 
-## Quick Start
+## Running with Docker
+
+Docker is the **recommended way** to run the full stack. A single command starts all 3 services automatically  API, Telegram bot, and frontend:
 
 ### Prerequisites
 
-- **Python 3.12+**
-- An **OpenAI API key** *(optional — the agent works without one via regex fallback)*
-
-### 1. Clone & Install
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
+- A `.env` file with your OpenAI API key (optional  the agent works via regex fallback without it)
 
 ```bash
-git clone https://github.com/your-org/Conut-AI-Engineering-Hackathon.git
-cd Conut-AI-Engineering-Hackathon
-
-python -m venv .venv
-.venv\Scripts\activate          # Windows
-# source .venv/bin/activate     # macOS / Linux
-
-pip install -r requirements.txt
+# Create .env
+echo OPENAI_API_KEY=sk-your-key-here > .env
 ```
 
-### 2. Configure Environment
+### Start Everything
 
 ```bash
-cp .env.example .env
-# Edit .env and add your OpenAI API key (optional)
+docker compose up --build -d
 ```
 
-### 3. Run the Data Pipeline
+That's it. All 3 services are now running:
+
+| Service | What runs | URL |
+|---------|-----------|-----|
+| `api` | FastAPI backend (uvicorn) | http://localhost:8000/docs |
+| `telegram-bot` | Telegram bot  auto-starts, auto-restarts |  |
+| `frontend` | React dashboard (nginx) | http://localhost:8080 |
+
+> **The Telegram bot requires no manual action.** `restart: always` means it starts with Docker and recovers from crashes automatically.
+
+### Useful Commands
 
 ```bash
-python pipelines/run_all.py
-```
-
-### 4. Start the API Server
-
-```bash
-python main.py
-# or: uvicorn main:app --host 127.0.0.1 --port 8000
-```
-
-### 5. Open the Docs
-
-Visit **http://127.0.0.1:8000/docs** for the interactive Swagger UI.
-
-### 6. Start the Telegram Bot *(optional)*
-
-```bash
-python telegram_bot.py
-```
-
-### 7. Start the Slack Bot *(optional)*
-
-```bash
-python slack_bot.py
+docker compose ps                     # see all running services
+docker compose logs telegram-bot -f   # watch bot logs live
+docker compose logs api -f            # watch API logs live
+docker compose down                   # stop everything
+docker compose up -d                  # start again (no rebuild)
+docker compose up --build -d          # rebuild + start (after code changes)
 ```
 
 ---
 
 ## API Reference
 
-### Primary Endpoint
-
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/chat` | Ask the agent any business question in natural language |
+| `POST` | `/chat` | Natural-language question  AI answer |
+| `GET` | `/forecast?branch=Conut` | Demand forecast |
+| `GET` | `/combos?branch=Conut+Jnah` | Combo recommendations |
+| `GET` | `/staffing?branch=Conut+-+Tyre` | Shift staffing estimate |
+| `GET` | `/expansion` | Expansion feasibility + candidate cities |
+| `GET` | `/growth` | Beverage growth strategy |
+| `GET` | `/branches` | List all valid branches |
+| `GET` | `/health` | Health check |
 
-**Request:**
+**Example  POST /chat:**
+```json
+{ "question": "Forecast demand for Tyre next month" }
+```
 ```json
 {
-  "question": "What are the best combos for Conut Jnah?"
+  "intent": "forecast",
+  "branch": "Conut - Tyre",
+  "answer": " Demand Forecast  Conut - Tyre\n...",
+  "confidence": 0.95
 }
 ```
-
-**Response:**
-```json
-{
-  "intent": "combo",
-  "branch": "Conut Jnah",
-  "answer": "🍩 Combo Recommendations — Conut Jnah\n...",
-  "confidence": 0.90,
-  "elapsed_ms": 312.4,
-  "data": { "..." : "..." },
-  "error": null
-}
-```
-
-### Service Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/combos` | Product combo recommendations |
-| `GET` | `/forecast` | Demand forecasts by branch |
-| `GET` | `/staffing` | Shift staffing estimates |
-| `GET` | `/expansion` | Expansion feasibility scorecards |
-| `GET` | `/growth` | Coffee & milkshake growth strategies |
-
-### Utility Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` | Service health check |
-| `GET` | `/branches` | List valid branches, shifts, and defaults |
-
----
-
-## Telegram Bot
-
-The agent is deployed as a **Telegram Bot** for easy demo access. Every message is forwarded to `POST /chat`, which runs through the full AI pipeline: **GPT-4o intent classification** → **entity extraction** → **service dispatch** → **formatted response** with emoji-rich Telegram formatting.
-
-**Commands:**
-| Command | Description |
-|---------|-------------|
-| `/start` | Welcome message with feature overview |
-| `/branches` | List all branches |
-| `/health` | Check API health |
-| *Any text* | Routed to the AI agent |
-
-**Response footer includes:**
-- 🔎 Detected intent
-- 🏪 Branch (if applicable)
-- 🎯 Confidence score
-- ⏱ Response time
-
----
-
-## Slack Bot
-
-The agent is also available as a **Slack Bot** — an alternative to Telegram that produces the exact same responses. Every message is forwarded to `POST /chat`, which runs through the full AI pipeline: **GPT-4o intent classification** → **entity extraction** → **service dispatch** (combo / forecast / staffing / expansion / growth / chitchat) → **formatted response**. Both bots share the same backend, the same LLM classifier, and the same analytics engines.
-
-Message the bot directly or @mention it in any channel.
-
-**Setup:**
-1. Create a Slack App at [api.slack.com/apps](https://api.slack.com/apps)
-2. Add Bot Token Scopes: `chat:write`, `app_mentions:read`, `im:history`, `im:read`, `im:write`
-3. Subscribe to events: `message.im`, `app_mention`
-4. Install the app to your workspace
-5. Set `SLACK_BOT_TOKEN` and `SLACK_APP_TOKEN` in `.env` (or edit `slack_bot.py`)
-6. Run: `python slack_bot.py`
-
-**Commands (in DMs or @mentions):**
-| Command | Description |
-|---------|-------------|
-| `help` | Welcome message with feature overview |
-| `branches` | List all branches |
-| `health` | Check API health |
-| *Any text* | Routed to the AI agent |
-
-Supports both **Socket Mode** (no public URL needed — ideal for development) and **HTTP mode** (for production behind ngrok or a load balancer).
-
----
-
-## LLM Intent Classification
-
-The agent uses a **two-tier classifier**:
-
-```
-User Question
-     │
-     ▼
-┌─────────────┐    success    ┌───────────────┐
-│  GPT-4o     │──────────────►│ Intent Object │
-│  (primary)  │               └───────────────┘
-└──────┬──────┘
-       │ failure / no API key
-       ▼
-┌─────────────┐    always     ┌───────────────┐
-│  Regex      │──────────────►│ Intent Object │
-│  (fallback) │               └───────────────┘
-└─────────────┘
-```
-
-- **GPT-4o** — A single API call (~100-200 tokens) classifies the question into one of 7 intents with a confidence score. Also handles entity extraction (branch, shift, horizon).
-- **Regex fallback** — 50+ keyword patterns across all intents ensure the agent works with zero API calls and instant response time.
-- **Supported intents:** `combo` · `forecast` · `staffing` · `expansion` · `growth` · `chitchat` · `unknown`
 
 ---
 
 ## OpenClaw Integration
 
-The agent is registered as an **OpenClaw skill** via [`skills/conut_ops/SKILL.md`](skills/conut_ops/SKILL.md) (288 lines).
+Registered as an OpenClaw skill via [`skills/conut_ops/SKILL.md`](skills/conut_ops/SKILL.md).
 
-OpenClaw can:
-- Discover available entities via `GET /branches`
-- Route any natural-language question through `POST /chat`
-- Access individual service endpoints for programmatic use
-
-See [`docs/OPENCLAW_INTEGRATION.md`](docs/OPENCLAW_INTEGRATION.md) for full integration details.
-
----
-
-## Data Pipeline
-
-Raw report exports are cleaned into 11 processed CSVs by the scripts in `pipelines/`.
-
-| Processed File | Source | Used By |
-|----------------|--------|---------|
-| `monthly_sales_by_branch.csv` | Branch revenue reports | Forecast, Expansion, Growth |
-| `basket_lines.csv` | Transaction-level basket data | Combo, Growth |
-| `attendance.csv` | Time & attendance records | Staffing, Growth |
-| `avg_sales_by_menu_channel.csv` | Channel-level averages | Expansion, Growth |
-| `customer_orders_delivery.csv` | Delivery order history | Expansion, Growth |
-| `Sales by items and groups.csv` | Item-level sales | Expansion, Growth |
-| `Summary by division-menu channel.csv` | Division breakdowns | Expansion, Growth |
-| `tax_summary_by_branch.csv` | Tax reports | Pipeline |
-
-Run all pipelines:
-
-```bash
-python pipelines/run_all.py
-```
-
----
-
-## Testing
-
-```bash
-# Run all tests
-python -m pytest tests/ -v
-
-# Run specific test suites
-python -m pytest tests/test_agent.py -v         # Agent pipeline
-python -m pytest tests/test_openclaw.py -v       # OpenClaw integration (20 tests)
-python -m pytest tests/test_forecast.py -v       # Forecast math
-python -m pytest tests/test_combo_compare.py -v  # Combo algorithms
-python -m pytest tests/test_expansion.py -v      # Expansion scorecards
-python -m pytest tests/test_staffing.py -v       # Staffing estimation
-```
-
----
-
-## Configuration
-
-All configuration is via environment variables (`.env` file). Copy the template to get started:
-
-```bash
-cp .env.example .env
-```
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `OPENAI_API_KEY` | *(none)* | OpenAI API key for GPT-4o *(optional)* |
-| `OPENAI_MODEL` | `gpt-4o` | Model for intent classification |
-| `APP_HOST` | `127.0.0.1` | Server bind address |
-| `APP_PORT` | `8000` | Server port |
-| `DATA_DIR` | `./data/processed` | Path to processed data |
-| `MIN_SUPPORT` | `0.05` | Minimum support threshold for combo analysis |
-| `MIN_CONFIDENCE` | `0.2` | Minimum confidence threshold for combo analysis |
+OpenClaw connects through:
+- `GET /branches`  discover available branches and entities
+- `POST /chat`  route any natural-language operational query
+- Individual service endpoints for programmatic access
 
 ---
 
 ## Branches
 
-The system supports **4 Conut branches**:
-
-| Branch | Aliases |
-|--------|---------|
+| Branch | Accepted inputs |
+|--------|----------------|
 | **Conut** | `conut` |
-| **Conut - Tyre** | `tyre`, `conut-tyre`, `conut tyre` |
+| **Conut - Tyre** | `tyre`, `conut tyre` |
 | **Conut Jnah** | `jnah`, `conut jnah` |
 | **Main Street Coffee** | `main street`, `msc` |
+
+Use `all` to aggregate across all branches (where supported).
+
+---
+
+## Project Structure
+
+```
+ main.py                  # FastAPI entry point
+ telegram_bot.py          # Telegram bot
+ Dockerfile               # Backend + bot image (shared)
+ docker-compose.yml       # 3 services: api, telegram-bot, frontend
+ requirements.txt
+ app/
+    agent/               # GPT-4o classifier, regex fallback, formatter
+    api/                 # REST route handlers
+    services/            # Business logic engines
+    schemas/             # Pydantic request/response models
+ data/
+    raw/                 # Original CSV report exports
+    processed/           # Cleaned tables (ETL output)
+ pipelines/               # ETL cleaning scripts + run_all.py
+ skills/conut_ops/        # OpenClaw SKILL.md
+ tests/                   # Test suite
+```
 
 ---
 
 ## License
 
-This project is licensed under the **Apache License 2.0** — see [LICENSE](LICENSE) for details.
+Apache License 2.0  see [LICENSE](LICENSE).
