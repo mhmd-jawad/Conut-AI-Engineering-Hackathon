@@ -121,14 +121,28 @@ def forecast_branch_demand(branch: str, horizon_months: int) -> dict[str, Any]:
     df = _load_data()
     all_branches = sorted(df["branch"].unique().tolist())
 
-    # ── validate branch ────────────────────────────────────────────────────
-    if branch not in all_branches:
-        return {
-            "branch": branch,
-            "error": f"Unknown branch. Available: {all_branches}",
-        }
-
-    branch_df = df[df["branch"] == branch].copy()
+    # ── resolve branch (case-insensitive, supports "all") ─────────────────
+    branch_key = branch.strip().lower()
+    if branch_key == "all":
+        # Aggregate all branches into a single virtual branch
+        agg = (
+            df.groupby(["month", "year", "month_idx"], as_index=False)
+            .agg({"total": "sum"})
+        )
+        agg["branch"] = "all"
+        branch_df = agg.sort_values(["year", "month_idx"]).reset_index(drop=True)
+        branch = "all"
+    else:
+        # Case-insensitive match
+        branch_map = {b.lower(): b for b in all_branches}
+        matched = branch_map.get(branch_key)
+        if not matched:
+            return {
+                "branch": branch,
+                "error": f"Unknown branch. Available: {all_branches}",
+            }
+        branch = matched
+        branch_df = df[df["branch"] == branch].copy()
     raw_values = branch_df["total"].values.astype(float)
     months_list = branch_df["month"].tolist()
     n_months = len(raw_values)

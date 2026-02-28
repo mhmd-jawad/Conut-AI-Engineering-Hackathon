@@ -368,16 +368,19 @@ def evaluate_expansion(branch: str = "") -> dict:
 
     branches = sorted(ms["branch"].unique().tolist())
 
-    # Validate branch input
+    # Validate branch input (case-insensitive)
     branch_label = branch.strip()
     if branch_label and branch_label.lower() != "all":
-        if branch_label not in branches:
+        branch_map = {b.lower(): b for b in branches}
+        matched = branch_map.get(branch_label.lower())
+        if not matched:
             close = [b for b in branches if branch_label.lower() in b.lower()]
             return {
                 "error": f"Unknown branch '{branch_label}'.",
                 "available_branches": branches,
                 "did_you_mean": close or None,
             }
+        branch_label = matched  # use canonical casing
 
     # ── Pre-compute shared metrics ────────────────────────────────────────
     all_totals: dict[str, float] = (

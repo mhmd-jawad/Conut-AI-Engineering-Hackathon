@@ -62,13 +62,8 @@ def _resolve_branch(requested_branch: str, available_branches: list[str]) -> str
     if key in normalized_map:
         return normalized_map[key]
 
-    # Prefix / substring fallback — e.g. "Conut" matches "Conut - Tyre"
-    prefix_matches = [b for norm, b in normalized_map.items() if norm.startswith(key)]
-    if len(prefix_matches) == 1:
-        return prefix_matches[0]
-    if prefix_matches:          # multiple matches → pick first alphabetically
-        return sorted(prefix_matches)[0]
-
+    # No prefix/substring fallback — avoid silently resolving "Conut" to
+    # "Conut - Tyre".  Instead, report the mismatch clearly.
     raise HTTPException(
         status_code=404,
         detail=(
@@ -243,6 +238,17 @@ def recommend_staffing(branch: str, shift: str) -> dict:
     monthly_sales_df = _load_monthly_sales_data()
 
     available_branches = sorted(attendance_df["branch"].dropna().unique().tolist())
+
+    # "all" is not meaningful for staffing (each branch has different staff)
+    if _normalize_text(branch) == "all":
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "Staffing estimation requires a specific branch. "
+                f"Available branches: {', '.join(available_branches)}"
+            ),
+        )
+
     canonical_branch = _resolve_branch(branch, available_branches)
     normalized_shift = _normalize_shift(shift)
 

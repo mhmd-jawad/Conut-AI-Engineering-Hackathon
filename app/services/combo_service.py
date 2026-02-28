@@ -115,13 +115,27 @@ def _pair_set_from_baskets(baskets: dict[str, set[str]], basket_ids: list[str]) 
     return pairs
 
 
-def _empty_response(branch: str, include_modifiers: bool) -> dict:
+def _available_branches(df: pd.DataFrame) -> list[str]:
+    """Return sorted unique branch names in the basket data."""
+    return sorted(df["Branch"].astype(str).str.strip().unique().tolist())
+
+
+def _empty_response(branch: str, include_modifiers: bool, available: list[str] | None = None) -> dict:
+    if available and branch.lower() not in [b.lower() for b in available] and branch.lower() != "all":
+        note = (
+            f"Branch '{branch}' has no delivery-basket data. "
+            f"Combo analysis uses delivery baskets only. "
+            f"Available branches: {', '.join(available)}. "
+            f"Try selecting one of those, or choose 'all' for cross-branch combos."
+        )
+    else:
+        note = f"No baskets with >=2 items found for branch '{branch}'."
     return {
         "branch": branch,
         "total_baskets": 0,
         "include_modifiers": include_modifiers,
         "recommendations": [],
-        "explanation": f"No baskets with >=2 items found for branch '{branch}'.",
+        "explanation": note,
     }
 
 
@@ -150,14 +164,15 @@ def recommend_combos(
 
     df = _load_basket_lines()
     branch_label, filtered = _filter_combo_rows(df, branch, include_modifiers)
+    available = _available_branches(df)
     if filtered.empty:
-        return _empty_response(branch_label, include_modifiers)
+        return _empty_response(branch_label, include_modifiers, available)
 
     baskets, basket_revenue = _build_baskets_and_revenue(filtered)
     item_avg_price = _average_item_prices(filtered)
     total_baskets = len(baskets)
     if total_baskets == 0:
-        return _empty_response(branch_label, include_modifiers)
+        return _empty_response(branch_label, include_modifiers, available)
 
     item_counts: Counter[str] = Counter()
     pair_counts: Counter[tuple[str, str]] = Counter()

@@ -1,6 +1,7 @@
 import os
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 import app.core.config  # noqa: F401 – load .env early
 
@@ -13,6 +14,14 @@ from app.api.staffing import router as staffing_router
 
 
 app = FastAPI(title="Conut Chief of Operations Agent", version="0.1.0")
+# ── CORS – allow the React dev-server and any deployed front-end ────────
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ── Unified agent endpoint (Operational AI Component) ───────────────────
 app.include_router(chat_router, tags=["chat"])
