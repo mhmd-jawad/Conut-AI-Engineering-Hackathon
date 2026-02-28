@@ -27,7 +27,7 @@ import re
 from pathlib import Path
 
 RAW_PATH = Path(__file__).parent.parent / "data" / "raw" / "rep_s_00435_SMRY.csv"
-OUT_PATH = Path(__file__).parent.parent / "data" / "processed" / "avg_sales_by_menu_channel.csv"
+OUT_PATH = Path(__file__).parent.parent / "data" / "processed" / "Average_Sales_By_Menu_2025.csv"
 
 KNOWN_CHANNELS = {"DELIVERY", "TABLE", "TAKE AWAY"}
 
@@ -87,16 +87,16 @@ def clean():
             sales            = parse_number(line[2]) if len(line) > 2 else 0.0
             avg_per_customer = parse_number(line[3]) if len(line) > 3 else 0.0
             rows.append({
-                "branch":           current_branch,
-                "channel":          first_cell,
-                "num_customers":    num_customers,
-                "sales":            sales,
-                "avg_per_customer": avg_per_customer,
+                "Branch": current_branch,
+                "Menu Name": first_cell,
+                "# Customers": int(num_customers),
+                "Sales": sales,
+                "Avg Per Customer": avg_per_customer,
             })
 
     # ── Write output ───────────────────────────────────────────────────────────
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = ["branch", "channel", "num_customers", "sales", "avg_per_customer"]
+    fieldnames = ["Branch", "Menu Name", "# Customers", "Sales", "Avg Per Customer"]
 
     with OUT_PATH.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -111,11 +111,11 @@ def clean():
     print("  " + "-" * 90)
     for r in rows:
         print(
-            f"  {r['branch']:<25} {r['channel']:<12} {r['num_customers']:>8,.0f} "
-            f"{r['sales']:>22,.2f} {r['avg_per_customer']:>18,.2f}"
+            f"  {r['Branch']:<25} {r['Menu Name']:<12} {r['# Customers']:>8,.0f} "
+            f"{r['Sales']:>22,.2f} {r['Avg Per Customer']:>18,.2f}"
         )
-    grand_sales = sum(r["sales"] for r in rows)
-    grand_cust  = sum(r["num_customers"] for r in rows)
+    grand_sales = sum(r["Sales"] for r in rows)
+    grand_cust  = sum(r["# Customers"] for r in rows)
     print("  " + "-" * 90)
     print(f"  {'GRAND TOTAL':<25} {'':12} {grand_cust:>8,.0f} {grand_sales:>22,.2f}")
 
