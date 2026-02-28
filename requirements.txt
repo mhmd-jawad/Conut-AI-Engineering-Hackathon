@@ -12,5 +12,9 @@ scikit-learn==1.8.0
 scipy==1.17.1
 joblib==1.5.3
 
+# LLM intent classification (optional – works without key via regex fallback)
+openai==2.24.0
+python-dotenv==1.1.0
+
 # Utilities
 python-dateutil==2.9.0.post0
