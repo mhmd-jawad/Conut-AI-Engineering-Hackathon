@@ -41,6 +41,9 @@ INTENT_PATTERNS: dict[str, list[re.Pattern]] = {
         re.compile(r"\bfrequently\s+bought\b", re.I),
         re.compile(r"\bproduct\s+combination\b", re.I),
         re.compile(r"\brecommend.*(?:item|product)\b", re.I),
+        re.compile(r"\bdeals?\b", re.I),
+        re.compile(r"\bpromotions?\b", re.I),
+        re.compile(r"\bupsell\b", re.I),
     ],
     "forecast": [
         re.compile(r"\bforecast\b", re.I),

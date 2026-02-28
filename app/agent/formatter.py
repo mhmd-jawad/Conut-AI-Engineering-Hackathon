@@ -175,12 +175,12 @@ def _format_growth(data: dict) -> str:
 
             heroes_c = prof.get("hero_coffee_items") or []
             if heroes_c:
-                items = [h.get("description", str(h)) if isinstance(h, dict) else str(h) for h in heroes_c[:3]]
+                items = [h.get("description") or h.get("item") or str(h) if isinstance(h, dict) else str(h) for h in heroes_c[:3]]
                 lines.append(f"- **Hero coffee items:** {', '.join(items)}")
 
             heroes_s = prof.get("hero_milkshake_items") or []
             if heroes_s:
-                items = [h.get("description", str(h)) if isinstance(h, dict) else str(h) for h in heroes_s[:3]]
+                items = [h.get("description") or h.get("item") or str(h) if isinstance(h, dict) else str(h) for h in heroes_s[:3]]
                 lines.append(f"- **Hero milkshake items:** {', '.join(items)}")
 
             under = prof.get("underperforming_items") or []
@@ -188,7 +188,7 @@ def _format_growth(data: dict) -> str:
                 lines.append("\n**Underperforming products (≥ 40% gap):**")
                 for u in under[:5]:
                     if isinstance(u, dict):
-                        lines.append(f"- {u.get('description', u.get('product', '?'))}: gap {_pct(u.get('gap_pct', 0))}")
+                        lines.append(f"- {u.get('description') or u.get('item') or u.get('product', '?')}: gap {_pct(u.get('gap_pct', 0))}")
                     else:
                         lines.append(f"- {u}")
 
@@ -289,8 +289,9 @@ def format_response(action: str, data: dict | None, error: str | None) -> str:
 
     formatter = _FORMATTERS[action]
 
-    # multi-branch result?
-    if data and "branches" in data:
+    # multi-branch result?  Only _multi_branch dispatch wraps in {"branches": {dict}}.
+    # Services like growth naturally have "branches" as a list — don't reroute those.
+    if data and isinstance(data.get("branches"), dict):
         return _format_multi(data, formatter)
 
     return formatter(data or {})

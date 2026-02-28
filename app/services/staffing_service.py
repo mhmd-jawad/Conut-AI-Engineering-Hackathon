@@ -62,6 +62,13 @@ def _resolve_branch(requested_branch: str, available_branches: list[str]) -> str
     if key in normalized_map:
         return normalized_map[key]
 
+    # Prefix / substring fallback — e.g. "Conut" matches "Conut - Tyre"
+    prefix_matches = [b for norm, b in normalized_map.items() if norm.startswith(key)]
+    if len(prefix_matches) == 1:
+        return prefix_matches[0]
+    if prefix_matches:          # multiple matches → pick first alphabetically
+        return sorted(prefix_matches)[0]
+
     raise HTTPException(
         status_code=404,
         detail=(
