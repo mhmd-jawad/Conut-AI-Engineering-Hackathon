@@ -1,0 +1,17 @@
+area,governorate,estimated_population,university_nearby,estimated_cafe_density,commercial_rent_tier,foot_traffic_tier,conut_present
+Jounieh,Keserwan-Jbeil,120000,1,high,4,5,0
+Tripoli,North,500000,1,medium,2,4,0
+Sidon,South,200000,1,medium,3,4,0
+Zahle,Beqaa,150000,1,low,2,3,0
+Byblos,Keserwan-Jbeil,40000,1,medium,3,4,0
+Batroun,North,30000,0,medium,3,4,0
+Hamra (Beirut),Beirut,80000,1,high,5,5,0
+Achrafieh (Beirut),Beirut,120000,1,high,5,5,0
+Verdun (Beirut),Beirut,60000,0,high,5,4,0
+Hazmieh,Mount Lebanon,55000,1,medium,3,4,0
+Broummana,Mount Lebanon,25000,0,medium,4,3,0
+Antelias,Mount Lebanon,50000,1,medium,3,4,0
+Tyre,South,200000,1,low,2,3,1
+Jnah (Beirut),Beirut,70000,0,medium,4,4,1
+Dbayeh,Mount Lebanon,30000,0,high,4,4,0
+Bikfaya,Mount Lebanon,20000,0,low,2,2,0
