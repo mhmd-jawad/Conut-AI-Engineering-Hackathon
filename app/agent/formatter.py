@@ -23,6 +23,20 @@ def _num(v: Any, precision: int = 1) -> str:
     return str(v)
 
 
+def _compact(v: Any) -> str:
+    """Format a large number in compact form (e.g. 1.2B, 345.6M, 12.3K)."""
+    if v is None:
+        return "N/A"
+    n = float(v)
+    if abs(n) >= 1_000_000_000:
+        return f"{n / 1_000_000_000:,.2f}B"
+    if abs(n) >= 1_000_000:
+        return f"{n / 1_000_000:,.1f}M"
+    if abs(n) >= 1_000:
+        return f"{n / 1_000:,.1f}K"
+    return f"{n:,.1f}"
+
+
 def _pct(v: Any) -> str:
     if v is None:
         return "N/A"
@@ -71,28 +85,70 @@ def _format_combo(data: dict) -> str:
 def _format_forecast(data: dict) -> str:
     lines: list[str] = []
     branch = data.get("branch", "?")
-    trend = data.get("trend_classification", "N/A")
-    mom = data.get("mom_growth_pct")
-    lines.append(f"📈  *Demand Forecast — {branch}*\n")
-    lines.append(f"🔹  Trend: *{trend}*")
-    lines.append(f"🔹  Month-over-month: *{_pct(mom) if mom is not None else 'N/A'}*\n")
+    trend = data.get("trend", data.get("trend_classification", "N/A"))
+    confidence = data.get("confidence", "N/A")
+    demand_idx = data.get("demand_index")
+    mom = data.get("avg_mom_growth_pct", data.get("mom_growth_pct"))
+    horizon = data.get("horizon_months", "?")
 
+    lines.append(f"📈  *Demand Forecast — {branch}*")
+    lines.append(f"━━━━━━━━━━━━━━━━━━━━\n")
+
+    # Summary metrics
+    lines.append(f"🔹  Trend: *{trend.title()}*")
+    lines.append(f"🔹  Avg Month-over-Month Growth: *{_pct(mom) if mom is not None else 'N/A'}*")
+    lines.append(f"🔹  Confidence: *{confidence.title() if isinstance(confidence, str) else confidence}*")
+    if demand_idx is not None:
+        lines.append(f"🔹  Demand Share (vs all branches): *{_pct(demand_idx * 100)}*")
+    lines.append(f"🔹  Forecast Horizon: *{horizon} month(s)*\n")
+
+    # Historical data
+    history = data.get("history") or []
+    if history:
+        lines.append("📊  *Recent History:*\n")
+        for h in history:
+            month_name = h.get("month", "?")
+            total = h.get("total", 0)
+            lines.append(f"    📅  {month_name}: *{_compact(total)}*")
+        lines.append("")
+
+    # Forecasts
     forecasts = data.get("forecasts") or []
     if forecasts:
-        lines.append("📅  *Monthly Projections:*\n")
-        for f in forecasts:
-            label = f.get("label", "?")
-            wma = _num(f.get("wma"))
-            trend_r = _num(f.get("trend_regression"))
-            ens = _num(f.get("ensemble"))
-            lines.append(f"  *{label}*")
-            lines.append(f"    WMA: {wma}  |  Trend: {trend_r}  |  Ensemble: {ens}")
+        lines.append("🔮  *Monthly Projections:*\n")
+        for fc in forecasts:
+            label = fc.get("month", fc.get("label", "?"))
+            naive = fc.get("naive")
+            wma = fc.get("wma")
+            trend_r = fc.get("trend")
+            ens = fc.get("ensemble")
 
-    anomalies = data.get("anomalies") or []
-    if anomalies:
-        lines.append("\n⚠️  *Anomalies Detected:*")
-        for a in anomalies:
-            lines.append(f"  ❗ {a.get('label', '?')}: {_num(a.get('value'))} (median {_num(a.get('median'))})")
+            lines.append(f"  ━━  *{label}*")
+            if naive is not None:
+                lines.append(f"      📌  Naive Baseline:  *{_compact(naive)}*")
+            if wma is not None:
+                lines.append(f"      📐  Weighted Moving Avg:  *{_compact(wma)}*")
+            if trend_r is not None:
+                lines.append(f"      📈  Trend Regression:  *{_compact(trend_r)}*")
+            if ens is not None:
+                lines.append(f"      ⭐  Ensemble (Final):  *{_compact(ens)}*")
+            lines.append("")
+
+    # Anomaly notes
+    anomaly_notes = data.get("anomaly_notes") or data.get("anomalies") or []
+    if anomaly_notes:
+        lines.append("⚠️  *Anomaly Notes:*")
+        for note in anomaly_notes:
+            if isinstance(note, str):
+                lines.append(f"  ❗ {note}")
+            elif isinstance(note, dict):
+                lines.append(f"  ❗ {note.get('label', '?')}: {_num(note.get('value'))} (median {_num(note.get('median'))})")
+        lines.append("")
+
+    # Explanation
+    explanation = data.get("explanation")
+    if explanation:
+        lines.append(f"💡  _{explanation}_")
 
     return "\n".join(lines)
 

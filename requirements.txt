@@ -19,5 +19,8 @@ python-dotenv==1.1.0
 # Telegram bot
 python-telegram-bot==22.6
 
+# Slack bot
+slack-bolt==1.22.0
+
 # Utilities
 python-dateutil==2.9.0.post0

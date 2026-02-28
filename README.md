@@ -8,6 +8,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.134-009688?logo=fastapi&logoColor=white)](#tech-stack)
 [![OpenAI GPT-4o](https://img.shields.io/badge/OpenAI-GPT--4o-412991?logo=openai&logoColor=white)](#llm-intent-classification)
 [![Telegram Bot](https://img.shields.io/badge/Telegram-Bot-26A5E4?logo=telegram&logoColor=white)](#telegram-bot)
+[![Slack Bot](https://img.shields.io/badge/Slack-Bot-4A154B?logo=slack&logoColor=white)](#slack-bot)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green)](#license)
 
 *Built for the AUB AI Engineering Hackathon*
@@ -26,6 +27,7 @@
 - [Quick Start](#quick-start)
 - [API Reference](#api-reference)
 - [Telegram Bot](#telegram-bot)
+- [Slack Bot](#slack-bot)
 - [LLM Intent Classification](#llm-intent-classification)
 - [OpenClaw Integration](#openclaw-integration)
 - [Data Pipeline](#data-pipeline)
@@ -39,7 +41,7 @@
 
 **Conut Chief of Operations Agent** is an end-to-end operational AI system built for **Conut**, a bakery & café chain with **4 branches** across Lebanon. It answers natural-language business questions by routing them through an intelligent agent pipeline backed by 5 analytics services — all powered by real transactional data.
 
-Ask the agent a question in plain English (or via Telegram), and it will classify your intent, extract entities, run the analysis, and return a beautifully formatted answer.
+Ask the agent a question in plain English (via Telegram, Slack, or the API), and it will classify your intent, extract entities, run the analysis, and return a beautifully formatted answer.
 
 > *"What are the best combos for Conut Jnah?"*
 > *"Forecast demand for the next 3 months"*
@@ -106,7 +108,7 @@ Ask the agent a question in plain English (or via Telegram), and it will classif
 1. **Data Layer** — ETL pipelines clean raw CSV exports into 11 canonical processed tables
 2. **Analytics Layer** — 5 service engines compute recommendations using pandas, scikit-learn, and statistical models
 3. **Agent Layer** — GPT-4o intent classifier + regex fallback + entity extraction + response formatting
-4. **Interface Layer** — FastAPI REST API + Telegram Bot + OpenClaw skill
+4. **Interface Layer** — FastAPI REST API + Telegram Bot + Slack Bot + OpenClaw skill
 
 For detailed architecture docs, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
@@ -119,7 +121,7 @@ For detailed architecture docs, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 | **API Framework** | FastAPI 0.134, Uvicorn |
 | **Data & ML** | pandas, NumPy, scikit-learn, SciPy |
 | **LLM** | OpenAI GPT-4o (intent classification + chitchat) |
-| **Bot** | python-telegram-bot 22.6 |
+| **Bots** | python-telegram-bot 22.6, slack-bolt 1.22 |
 | **Validation** | Pydantic v2 |
 | **Agent Platform** | OpenClaw (SKILL.md) |
 | **Language** | Python 3.12+ |
@@ -133,6 +135,7 @@ Conut-AI-Engineering-Hackathon/
 │
 ├── main.py                          # FastAPI app entry point
 ├── telegram_bot.py                  # Telegram bot (forwards to /chat)
+├── slack_bot.py                     # Slack bot (forwards to /chat)
 ├── requirements.txt                 # Python dependencies
 ├── .env.example                     # Environment variable template
 │
@@ -241,6 +244,12 @@ Visit **http://127.0.0.1:8000/docs** for the interactive Swagger UI.
 python telegram_bot.py
 ```
 
+### 7. Start the Slack Bot *(optional)*
+
+```bash
+python slack_bot.py
+```
+
 ---
 
 ## API Reference
@@ -292,7 +301,7 @@ python telegram_bot.py
 
 ## Telegram Bot
 
-The agent is deployed as a **Telegram Bot** for easy demo access. It forwards every message to `POST /chat` and renders the response with emoji-rich formatting.
+The agent is deployed as a **Telegram Bot** for easy demo access. Every message is forwarded to `POST /chat`, which runs through the full AI pipeline: **GPT-4o intent classification** → **entity extraction** → **service dispatch** → **formatted response** with emoji-rich Telegram formatting.
 
 **Commands:**
 | Command | Description |
@@ -307,6 +316,32 @@ The agent is deployed as a **Telegram Bot** for easy demo access. It forwards ev
 - 🏪 Branch (if applicable)
 - 🎯 Confidence score
 - ⏱ Response time
+
+---
+
+## Slack Bot
+
+The agent is also available as a **Slack Bot** — an alternative to Telegram that produces the exact same responses. Every message is forwarded to `POST /chat`, which runs through the full AI pipeline: **GPT-4o intent classification** → **entity extraction** → **service dispatch** (combo / forecast / staffing / expansion / growth / chitchat) → **formatted response**. Both bots share the same backend, the same LLM classifier, and the same analytics engines.
+
+Message the bot directly or @mention it in any channel.
+
+**Setup:**
+1. Create a Slack App at [api.slack.com/apps](https://api.slack.com/apps)
+2. Add Bot Token Scopes: `chat:write`, `app_mentions:read`, `im:history`, `im:read`, `im:write`
+3. Subscribe to events: `message.im`, `app_mention`
+4. Install the app to your workspace
+5. Set `SLACK_BOT_TOKEN` and `SLACK_APP_TOKEN` in `.env` (or edit `slack_bot.py`)
+6. Run: `python slack_bot.py`
+
+**Commands (in DMs or @mentions):**
+| Command | Description |
+|---------|-------------|
+| `help` | Welcome message with feature overview |
+| `branches` | List all branches |
+| `health` | Check API health |
+| *Any text* | Routed to the AI agent |
+
+Supports both **Socket Mode** (no public URL needed — ideal for development) and **HTTP mode** (for production behind ngrok or a load balancer).
 
 ---
 
