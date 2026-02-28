@@ -1,0 +1,64 @@
+# ─────────────────────────────────────────────────────────────
+# Conut Ops AI  –  Docker Compose
+#
+# Local dev:     docker compose up --build
+# Prod-like:     docker compose -f docker-compose.yml up -d
+# ─────────────────────────────────────────────────────────────
+
+services:
+
+  # ── FastAPI backend ─────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: conut-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env           # OPENAI_API_KEY, etc.  (never committed)
+    environment:
+      PORT: "8000"
+    volumes:
+      # Mount data directory so CSV files are accessible
+      - ./data:/app/data:ro
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ── Telegram bot (auto-start, auto-restart) ──────────────────
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: conut-telegram-bot
+    restart: always
+    env_file:
+      - .env
+    environment:
+      API_BASE: http://api:8000
+    command: ["python", "telegram_bot.py"]
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # ── React frontend (Nginx) ───────────────────────────────────
+  frontend:
+    build:
+      context: ./frontendui
+      dockerfile: Dockerfile
+      args:
+        # Point the built JS bundle at the backend
+        VITE_API_BASE_URL: http://localhost:8000
+    container_name: conut-frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy

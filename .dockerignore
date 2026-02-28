@@ -1,0 +1,50 @@
+# ── Python cache ──────────────────────────────────────────────
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+
+# ── Virtual environments ───────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Secrets ───────────────────────────────────────────────────
+.env
+*.env
+
+# ── Tests & dev tools ─────────────────────────────────────────
+tests/
+*.test.py
+pytest.ini
+.pytest_cache/
+.ruff_cache/
+
+# ── Git ───────────────────────────────────────────────────────
+.git/
+.gitignore
+
+# ── IDE ───────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.code-workspace
+
+# ── OS ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Docs & misc ───────────────────────────────────────────────
+docs/
+*.md
+LICENSE
+
+# ── Frontend (built separately) ───────────────────────────────
+frontendui/
+
+# ── Pipelines (not needed at runtime) ─────────────────────────
+pipelines/
+
+# ── Raw data (processed CSVs are included) ────────────────────
+data/raw/
