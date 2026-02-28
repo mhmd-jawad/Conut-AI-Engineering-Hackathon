@@ -283,12 +283,18 @@ HELP_TEXT = (
 
 # ── Public API ──────────────────────────────────────────────────────────
 
+def _format_chitchat(data: dict) -> str:
+    """Pass through the conversational reply from the LLM."""
+    return data.get("reply", "\U0001f44b Hey! Ask me a business question about Conut.")
+
+
 _FORMATTERS: dict[str, Any] = {
     "combo":     _format_combo,
     "forecast":  _format_forecast,
     "staffing":  _format_staffing,
     "expansion": _format_expansion,
     "growth":    _format_growth,
+    "chitchat":  _format_chitchat,
 }
 
 

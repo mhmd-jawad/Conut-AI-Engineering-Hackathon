@@ -85,6 +85,47 @@ def _multi_branch(fn, branches: list[str], **extra) -> dict[str, Any]:
 DEFAULT_SHIFT = "morning"
 
 
+# ── Chitchat LLM reply ──────────────────────────────────────────────────
+
+_STATIC_CHITCHAT = (
+    "\U0001f44b Hey there! I'm the Conut Operations Agent.\n\n"
+    "I'm here to help you with:\n"
+    "\U0001f369 Combo deals  |  \U0001f4c8 Forecasts  |  \U0001f465 Staffing\n"
+    "\U0001f3d7 Expansion  |  \u2615 Growth strategies\n\n"
+    "Just ask me a business question and I'll crunch the numbers for you!"
+)
+
+
+def _chitchat_reply(intent: Intent) -> str:
+    """Generate a friendly conversational reply using GPT-4o, with a static fallback."""
+    import os, json, logging as _log
+    api_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if api_key:
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key)
+            resp = client.chat.completions.create(
+                model=os.getenv("OPENAI_MODEL", "gpt-4o"),
+                messages=[
+                    {"role": "system", "content": (
+                        "You are the friendly AI assistant for Conut, a bakery & cafe chain "
+                        "with 4 branches in Lebanon. You handle greetings and small talk warmly. "
+                        "Keep replies short (2-3 sentences max), friendly, and always gently "
+                        "remind the user you can help with: combo optimization, demand forecasting, "
+                        "staffing, expansion feasibility, and coffee/milkshake growth strategies. "
+                        "Use a few emojis to keep it fun. Never use markdown headers."
+                    )},
+                    {"role": "user", "content": intent.raw_question or "hello"},
+                ],
+                temperature=0.8,
+                max_tokens=150,
+            )
+            return resp.choices[0].message.content or _STATIC_CHITCHAT
+        except Exception as exc:
+            _log.getLogger(__name__).warning("Chitchat LLM failed: %s", exc)
+    return _STATIC_CHITCHAT
+
+
 def dispatch(intent: Intent) -> dict[str, Any]:
     """Route an Intent to the correct service and return a wrapped result."""
 
@@ -128,6 +169,11 @@ def dispatch(intent: Intent) -> dict[str, Any]:
         if len(branches_to_query) == 1:
             return _safe_call(_growth, branch=branches_to_query[0])
         return _safe_call(_growth, branch="all")
+
+    # ── chitchat ────────────────────────────────────────────────────────
+    if action == "chitchat":
+        reply = _chitchat_reply(intent)
+        return {"success": True, "data": {"reply": reply}, "error": None}
 
     # ── unknown ─────────────────────────────────────────────────────────
     return {

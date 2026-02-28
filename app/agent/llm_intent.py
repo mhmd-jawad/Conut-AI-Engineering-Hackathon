@@ -68,16 +68,21 @@ INTENT DEFINITIONS (choose exactly one)
    product mix improvement, "sell more drinks", "boost coffee sales", \
    "improve beverage performance", drink menu optimization.
 
-6. **unknown** — ONLY for clearly off-topic questions: weather, jokes, \
-   personal questions, completely unrelated subjects. When in doubt, \
-   pick the closest business intent — do NOT default to unknown.
+6. **chitchat** — greetings, small talk, casual conversation, thanks, \
+   "hello", "how are you?", "good morning", "thanks", "who are you", \
+   "what can you do", compliments, farewells, jokes, or anything \
+   conversational that is NOT a specific business data question.
+
+7. **unknown** — ONLY when the message is completely incomprehensible \
+   (random characters, empty, or a language you cannot parse). \
+   When in doubt between chitchat and unknown, prefer chitchat.
 
 ═══════════════════════════════════════════════════════════════
 RESPONSE FORMAT
 ═══════════════════════════════════════════════════════════════
 
 Return ONLY a JSON object:
-{"intent": "<combo|forecast|staffing|expansion|growth|unknown>", "confidence": <0.0-1.0>}
+{"intent": "<combo|forecast|staffing|expansion|growth|chitchat|unknown>", "confidence": <0.0-1.0>}
 
 CRITICAL RULES:
 - Think about what the user REALLY wants, not just keywords.
@@ -130,7 +135,7 @@ def llm_classify(question: str) -> Optional[Intent]:
         parsed = json.loads(raw)
 
         action = parsed.get("intent", "unknown").lower().strip()
-        if action not in {"combo", "forecast", "staffing", "expansion", "growth", "unknown"}:
+        if action not in {"combo", "forecast", "staffing", "expansion", "growth", "chitchat", "unknown"}:
             action = "unknown"
 
         confidence = float(parsed.get("confidence", 0.8))
@@ -145,6 +150,7 @@ def llm_classify(question: str) -> Optional[Intent]:
             top_k=_extract_top_k(question),
             confidence=confidence,
             matched_keywords=["llm"],
+            raw_question=question,
         )
 
     except Exception as exc:

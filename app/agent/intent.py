@@ -107,13 +107,14 @@ INTENT_BOOST: dict[str, list[re.Pattern]] = {
 @dataclass
 class Intent:
     """Parsed intent from a user question."""
-    action: str                        # combo | forecast | staffing | expansion | growth | unknown
+    action: str                        # combo | forecast | staffing | expansion | growth | chitchat | unknown
     branch: Optional[str] = None       # canonical branch name or "all"
     shift: Optional[str] = None        # morning | midday | evening
     horizon_months: int = 3            # default 3
     top_k: int = 5                     # default 5
     confidence: float = 0.0            # how confident we are [0-1]
     matched_keywords: list[str] = field(default_factory=list)
+    raw_question: Optional[str] = None # original text (used by chitchat LLM)
 
 
 # ── Entity extraction helpers ───────────────────────────────────────────
@@ -158,6 +159,33 @@ def _extract_top_k(text: str) -> int:
     return 5  # default
 
 
+# ── Chitchat detection (fallback when no LLM) ──────────────────────────
+
+_CHITCHAT_RE = re.compile(
+    r"\b(?:hi|hello|hey|yo|sup|hola|salam|bonjour|marhaba)\b"
+    r"|\bhow\s+are\s+you\b"
+    r"|\bwhat(?:'s|\s+is)\s+up\b"
+    r"|\bgood\s+(?:morning|afternoon|evening|night|day)\b"
+    r"|\bthanks?\b|\bthank\s+you\b"
+    r"|\bbye\b|\bgoodbye\b|\bsee\s+you\b"
+    r"|\bwho\s+are\s+you\b|\bwhat\s+(?:are|can)\s+you\b"
+    r"|\bnice\s+to\s+meet\b|\bpleasure\b"
+    r"|\bhaha\b|\blol\b|\b(?:that'?s?\s+)?funny\b"
+    r"|\bhelp\s*$|\bhelp\s+me\b"
+    r"|\bwhat\s+do\s+you\s+do\b",
+    re.I,
+)
+
+
+def _is_chitchat(text: str) -> bool:
+    """Return True if *text* looks like casual chat / greeting."""
+    stripped = text.strip()
+    # Very short messages with no business keywords are likely chitchat
+    if len(stripped) < 4:
+        return True
+    return bool(_CHITCHAT_RE.search(stripped))
+
+
 # ── Main classifier ────────────────────────────────────────────────────
 
 def classify_intent(question: str) -> Intent:
@@ -183,10 +211,19 @@ def classify_intent(question: str) -> Intent:
     best_score = scores[best]
 
     if best_score == 0:
+        # Check for chitchat before calling it unknown
+        if _is_chitchat(question):
+            return Intent(
+                action="chitchat",
+                branch=None,
+                confidence=0.8,
+                raw_question=question,
+            )
         return Intent(
             action="unknown",
             branch=_extract_branch(question),
             confidence=0.0,
+            raw_question=question,
         )
 
     # Normalise confidence: score / (number of patterns for that intent)
@@ -201,4 +238,5 @@ def classify_intent(question: str) -> Intent:
         top_k=_extract_top_k(question),
         confidence=round(confidence, 3),
         matched_keywords=matched[best],
+        raw_question=question,
     )
