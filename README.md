@@ -10,17 +10,22 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](#running-with-docker)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green)](#license)
 
-*Prof. Ammar Mohanna  American University of Beirut*
+*Prof. Ammar Mohanna · American University of Beirut*
+
+**Team:** Mohammad Jawad · Hassan Fouani · Mohammad Jaafar Farhat
 
 </div>
 
 ---
 
-##  Try It Now  Telegram Bot (Live)
+## 🚀 Try It Now
 
-The backend is **deployed and running**. Talk to the agent directly on Telegram  no setup needed:
+The backend is **deployed and running**. Two ways to interact:
 
-> ###  [t.me/AiEngineering503Nbot](https://t.me/AiEngineering503Nbot)
+| Interface | Link |
+|-----------|------|
+| 🌐 **Web Dashboard** | [conut-ai-engineering-hackathon.vercel.app](https://conut-ai-engineering-hackathon.vercel.app) |
+| 💬 **Telegram Bot** | [t.me/AiEngineering503Nbot](https://t.me/AiEngineering503Nbot) |
 
 Just open the link and start asking questions:
 
